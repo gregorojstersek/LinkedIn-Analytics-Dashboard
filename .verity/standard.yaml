@@ -1,0 +1,167 @@
+version: "1.0.0"
+created_by: verity-setup
+
+knowledge_spec:
+  project_name: "linkedin-analytics-dashboard"
+  languages: [javascript]
+  frameworks: []
+  architecture: monolith
+  build_system: npm
+  test_framework: none
+
+quality_dimensions:
+  - id: comprehensibility
+    description: "Code readable in one context load"
+    signals:
+      - metric: file_length
+        threshold: 300
+        unit: lines
+        rationale: "AI context windows degrade on large files"
+      - metric: cyclomatic_complexity
+        threshold: 15
+        unit: per_function
+        rationale: "Complexity-aware feedback improves AI performance by 35.71%"
+      - metric: function_length
+        threshold: 50
+        unit: lines
+        rationale: "Short functions are easier for agents to modify safely"
+      - metric: naming_quality
+        tool: ai
+        rationale: "Descriptive names improve AI comprehension by 2x"
+
+  - id: modularity
+    description: "Modify one concern without touching 3+ files"
+    signals:
+      - metric: single_responsibility
+        tool: ai
+        rationale: "AI performance drops sharply at 3+ files per change"
+      - metric: shallow_abstractions
+        tool: ai
+        rationale: "LLMs struggle with deep inheritance hierarchies"
+
+  - id: type_safety
+    description: "Type system catches errors before runtime"
+    signals:
+      - metric: strict_equality
+        tool: ai
+        rationale: "Plain JS — no TypeScript; AI reviews for === vs ==, typeof guards, and null checks"
+
+  - id: test_adequacy
+    description: "Tests define expected behavior for agents"
+    signals:
+      - metric: test_coverage
+        threshold: 80
+        unit: percent
+        ai_threshold: 90
+        rationale: "90% recommended for AI-generated code"
+      - metric: test_quality
+        tool: ai
+        rationale: "Tests are the primary safety net for AI agents"
+
+security_patterns:
+  - id: no-hardcoded-secrets
+    description: "No secrets, API keys, passwords, or tokens in source code"
+    severity: critical
+    cwe: [CWE-798]
+    enforced_by:
+      - tool: Trivy
+        config:
+          scanners: [secret]
+      - tool: Semgrep
+        rules: [generic.secrets]
+
+  - id: input-sanitization
+    description: "All user input validated and sanitized before use"
+    severity: critical
+    cwe: [CWE-20, CWE-80, CWE-89, CWE-117]
+    enforced_by:
+      - tool: Semgrep
+        rules:
+          - javascript.lang.security.audit.unsafe-html
+
+  - id: parameterized-queries
+    description: "Database queries use parameters, never string concatenation"
+    severity: critical
+    cwe: [CWE-89]
+    enforced_by:
+      - tool: Semgrep
+        rules:
+          - javascript.lang.security.audit.sqli
+
+  - id: dependency-verification
+    description: "No known-vulnerable dependencies"
+    severity: high
+    cwe: [CWE-1395]
+    enforced_by:
+      - tool: Trivy
+        config:
+          scanners: [vuln]
+          severity: [HIGH, CRITICAL]
+
+  - id: no-unsafe-deserialization
+    description: "No unsafe deserialization of untrusted data"
+    severity: high
+    cwe: [CWE-502]
+    enforced_by: []
+
+  - id: access-control-checks
+    description: "Authorization verified on all sensitive operations"
+    severity: high
+    cwe: [CWE-639]
+    enforced_by: []
+
+  - id: config-file-integrity
+    description: "Configuration files not manipulable by untrusted input"
+    severity: high
+    cwe: [CWE-15]
+    enforced_by: []
+
+custom_patterns:
+  - id: no-dom-injection-with-dynamic-content
+    description: "Chrome extension content scripts must not assign dynamic data to innerHTML"
+    severity: high
+    enforced_by:
+      - tool: Semgrep
+        rules: [javascript.lang.security.audit.unsafe-html]
+    rationale: "LinkedIn page DOM contains user-controlled text; innerHTML injection creates XSS risk inside the extension"
+
+  - id: no-server-path-from-user-input
+    description: "File paths served by server.mjs must be resolved only from the project root, never from raw URL segments"
+    severity: critical
+    enforced_by: []
+    rationale: "server.mjs maps URL paths to local files; unsanitized path segments could enable directory traversal (CWE-22)"
+
+  - id: no-linkedin-credentials-in-source
+    description: "LinkedIn session cookies, auth tokens, and li_at values must never appear in source code or data files"
+    severity: critical
+    enforced_by:
+      - tool: Trivy
+        config:
+          scanners: [secret]
+    rationale: "The extension captures LinkedIn session data; accidental commit of a real session token would expose the user's account"
+
+process_constraints:
+  self_healing_limit: 2
+  analysis_mode: balanced
+  compound_enabled: true
+  memory_graph_enabled: true
+  memory_graph_budget_tokens: 2000
+  knowledge_injection_budget_tokens: 2000
+  finding_autosuppress_threshold: 2
+  intent_fail_threshold: 4
+  intent_warn_threshold: 7
+  exclude_paths:
+    - node_modules
+    - dist
+    - build
+    - .git
+    - coverage
+
+tool_configuration:
+  eslint:
+    enabled: true
+  semgrep:
+    enabled: true
+    rulesets: ["p/security-audit", "p/javascript"]
+  trivy:
+    enabled: true

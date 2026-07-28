@@ -1,0 +1,13 @@
+node_modules/
+
+# Verity
+.verity/credentials
+.verity/.cache/
+.verity/.logs/
+.verity/.last-analysis
+.verity/.iteration-count
+.verity/.last-pass-hash
+.verity/.last-intent
+.verity/.memory-sync-state.json
+.verity/memory/log.md
+.claude/settings.local.json

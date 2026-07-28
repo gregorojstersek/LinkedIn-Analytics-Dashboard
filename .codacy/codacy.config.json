@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "metadata": {
+    "source": "local",
+    "languages": ["JavaScript"]
+  },
+  "tools": [
+    {
+      "toolId": "ESLint9",
+      "patterns": [
+        { "patternId": "no-eval" },
+        { "patternId": "no-implied-eval" },
+        { "patternId": "no-new-func" },
+        { "patternId": "no-script-url" },
+        { "patternId": "no-unused-vars" },
+        { "patternId": "no-undef" },
+        { "patternId": "no-unreachable" },
+        { "patternId": "no-constant-condition" },
+        { "patternId": "no-dupe-keys" },
+        { "patternId": "no-duplicate-case" },
+        { "patternId": "no-fallthrough" },
+        { "patternId": "no-self-assign" },
+        { "patternId": "no-self-compare" },
+        { "patternId": "use-isnan" },
+        { "patternId": "valid-typeof" },
+        { "patternId": "no-loss-of-precision" },
+        { "patternId": "no-unsafe-optional-chaining" },
+        { "patternId": "eqeqeq" },
+        { "patternId": "no-var" },
+        { "patternId": "prefer-const" }
+      ]
+    },
+    {
+      "toolId": "Semgrep",
+      "patterns": [
+        { "patternId": "javascript.lang.security.audit.sqli.node-sequelize-sqli" },
+        { "patternId": "javascript.lang.security.audit.sqli.node-knex-sqli" },
+        { "patternId": "javascript.lang.security.audit.command-injection" },
+        { "patternId": "javascript.browser.security.insufficient-postmessage-origin-validation" },
+        { "patternId": "javascript.lang.security.audit.unsafe-html" },
+        { "patternId": "generic.secrets.security.detected-generic-api-key" },
+        { "patternId": "generic.secrets.security.detected-aws-account-id" },
+        { "patternId": "javascript.express.security.audit.express-jwt-not-revoked" },
+        { "patternId": "javascript.jsonwebtoken.security.jwt-hardcode" }
+      ]
+    },
+    {
+      "toolId": "Trivy",
+      "patterns": [
+        { "patternId": "trivy_vuln" },
+        { "patternId": "trivy_secret" },
+        { "patternId": "trivy_config" },
+        { "patternId": "trivy_license" }
+      ]
+    }
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.git/**",
+    "**/coverage/**"
+  ]
+}
