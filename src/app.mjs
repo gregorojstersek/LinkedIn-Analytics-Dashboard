@@ -10,7 +10,7 @@ const dateFormat = new Intl.DateTimeFormat('en-US', {
   day: 'numeric'
 });
 
-const state = {
+export const state = {
   posts: [],
   filtered: [],
   selectedId: null,
@@ -24,7 +24,7 @@ const state = {
   }
 };
 
-const elements = {
+const elements = typeof document === 'undefined' ? {} : {
   lastUpdated: document.querySelector('[data-last-updated]'),
   refreshButton: document.querySelector('[data-refresh]'),
   seedButton: document.querySelector('[data-seed]'),
@@ -52,7 +52,7 @@ function formatNumber(value) {
   return numberFormat.format(value || 0);
 }
 
-function getMetricValue(post, field) {
+export function getMetricValue(post, field) {
   const raw = post?.[field];
   if (raw === null || raw === undefined || raw === '') {
     return null;
@@ -81,7 +81,7 @@ function formatMetricValue(value) {
   return formatNumber(value);
 }
 
-function getPostEngagement(post) {
+export function getPostEngagement(post) {
   return (
     Number(post.engagement) ||
     Number(post.reactions || 0) +
@@ -92,7 +92,7 @@ function getPostEngagement(post) {
   );
 }
 
-function getEngagementRate(post) {
+export function getEngagementRate(post) {
   const impressions = Number(post.impressions || 0);
   if (impressions <= 0) {
     return 0;
@@ -100,7 +100,7 @@ function getEngagementRate(post) {
   return getPostEngagement(post) / impressions;
 }
 
-function truncate(text, max = 90) {
+export function truncate(text, max = 90) {
   const normalized = String(text || '').replace(/\s+/g, ' ').trim();
   if (normalized.length <= max) {
     return normalized;
@@ -108,7 +108,7 @@ function truncate(text, max = 90) {
   return `${normalized.slice(0, max - 1)}...`;
 }
 
-function getDisplayText(post) {
+export function getDisplayText(post) {
   function stripLeadingMetadata(text) {
     let normalized = String(text || '')
       .replace(/\r/g, '')
@@ -151,7 +151,7 @@ function getDisplayText(post) {
   return raw;
 }
 
-function getPostTitle(post, maxWords = 8) {
+export function getPostTitle(post, maxWords = 8) {
   const words = getDisplayText(post).replace(/\s+/g, ' ').split(' ').filter(Boolean);
   if (words.length <= maxWords) {
     return words.join(' ');
@@ -159,7 +159,7 @@ function getPostTitle(post, maxWords = 8) {
   return `${words.slice(0, maxWords).join(' ')}...`;
 }
 
-function isRepost(post) {
+export function isRepost(post) {
   if (typeof post.isRepost === 'boolean') {
     return post.isRepost;
   }
@@ -167,7 +167,7 @@ function isRepost(post) {
   return /\breposted this\b|\breposted\b|\bshared this\b/.test(text);
 }
 
-function getPreviewImageUrl(post) {
+export function getPreviewImageUrl(post) {
   const url = String(post.imageUrl || post.previewImageUrl || post.thumbnailUrl || '').trim();
   if (!url) {
     return '';
@@ -178,7 +178,7 @@ function getPreviewImageUrl(post) {
   return '';
 }
 
-function escapeHtml(value) {
+export function escapeHtml(value) {
   return String(value || '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -187,7 +187,7 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
-function getDateLabel(dateValue) {
+export function getDateLabel(dateValue) {
   const timestamp = Date.parse(dateValue);
   if (Number.isNaN(timestamp)) {
     return 'Unknown date';
@@ -195,7 +195,7 @@ function getDateLabel(dateValue) {
   return dateFormat.format(new Date(timestamp));
 }
 
-function decodeLinkedInActivityTimestamp(input) {
+export function decodeLinkedInActivityTimestamp(input) {
   const raw = String(input || '');
   const match = raw.match(/activity[:/-](\d{15,20})/i) || raw.match(/(\d{15,20})/);
   if (!match) {
@@ -219,7 +219,7 @@ function decodeLinkedInActivityTimestamp(input) {
   }
 }
 
-function getPublishedTimestamp(post) {
+export function getPublishedTimestamp(post) {
   const fromActivityId =
     decodeLinkedInActivityTimestamp(post.postUrl) ||
     decodeLinkedInActivityTimestamp(post.sourceId) ||
@@ -236,7 +236,7 @@ function getPublishedTimestamp(post) {
   return null;
 }
 
-function getPostDateLabel(post) {
+export function getPostDateLabel(post) {
   const ts = getPublishedTimestamp(post);
   if (!ts) {
     return 'Unknown date';
@@ -244,7 +244,7 @@ function getPostDateLabel(post) {
   return dateFormat.format(new Date(ts));
 }
 
-function withinRangePost(post, range) {
+export function withinRangePost(post, range) {
   if (range === 'all') {
     return true;
   }
@@ -263,7 +263,7 @@ function withinRangePost(post, range) {
   return timestamp >= cutoff;
 }
 
-function sortPosts(posts, sortBy) {
+export function sortPosts(posts, sortBy) {
   const sorted = [...posts];
 
   if (sortBy === 'oldest') {
@@ -290,7 +290,7 @@ function sortPosts(posts, sortBy) {
   return sorted;
 }
 
-function applyFilters() {
+export function applyFilters() {
   const searchLower = state.filters.search.toLowerCase();
 
   let next = state.posts.filter((post) => {
@@ -323,7 +323,7 @@ function applyFilters() {
   }
 }
 
-function getKpis(posts) {
+export function getKpis(posts) {
   let impressions = 0;
   let engagement = 0;
   let reactions = 0;
@@ -374,7 +374,7 @@ function renderKpis() {
   }
 }
 
-function buildTrendSeries(posts) {
+export function buildTrendSeries(posts) {
   const byDay = new Map();
 
   for (const post of posts) {
@@ -396,7 +396,7 @@ function buildTrendSeries(posts) {
     .map(([date, metrics]) => ({ date, ...metrics }));
 }
 
-function pointsFromSeries(values, width, height, maxValue) {
+export function pointsFromSeries(values, width, height, maxValue) {
   if (values.length === 0) {
     return '';
   }
@@ -869,5 +869,7 @@ function bindEvents() {
   });
 }
 
-bindEvents();
-loadPosts();
+if (typeof document !== 'undefined') {
+  bindEvents();
+  loadPosts();
+}

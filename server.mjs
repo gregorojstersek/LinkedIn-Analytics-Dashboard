@@ -6,8 +6,8 @@ import { promises as fs } from 'node:fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = __dirname;
-const DATA_DIR = path.join(ROOT_DIR, 'data');
-const DATA_FILE = path.join(DATA_DIR, 'posts.json');
+const DATA_FILE = process.env.DATA_FILE || path.join(ROOT_DIR, 'data', 'posts.json');
+const DATA_DIR = path.dirname(DATA_FILE);
 const PORT = Number(process.env.PORT || 5173);
 const HOST = process.env.HOST || '127.0.0.1';
 
@@ -23,7 +23,7 @@ const MIME_TYPES = {
   '.jpeg': 'image/jpeg'
 };
 
-function hashText(input) {
+export function hashText(input) {
   let hash = 0;
   for (let i = 0; i < input.length; i += 1) {
     hash = (hash * 31 + input.charCodeAt(i)) | 0;
@@ -31,12 +31,12 @@ function hashText(input) {
   return Math.abs(hash).toString(36);
 }
 
-function toFiniteNumber(value) {
+export function toFiniteNumber(value) {
   const num = Number(value);
   return Number.isFinite(num) && num >= 0 ? num : 0;
 }
 
-function toOptionalFiniteNumber(value) {
+export function toOptionalFiniteNumber(value) {
   if (value === null || value === undefined || value === '') {
     return null;
   }
@@ -44,7 +44,7 @@ function toOptionalFiniteNumber(value) {
   return Number.isFinite(num) && num >= 0 ? num : null;
 }
 
-function maxKnownValue(a, b) {
+export function maxKnownValue(a, b) {
   const left = toOptionalFiniteNumber(a);
   const right = toOptionalFiniteNumber(b);
 
@@ -60,7 +60,7 @@ function maxKnownValue(a, b) {
   return Math.max(left, right);
 }
 
-function sanitizeContentType(value) {
+export function sanitizeContentType(value) {
   const normalized = String(value || '').trim().toLowerCase();
   if (['text', 'image', 'video', 'document', 'poll', 'article'].includes(normalized)) {
     return normalized;
@@ -68,7 +68,7 @@ function sanitizeContentType(value) {
   return 'text';
 }
 
-function decodeLinkedInActivityTimestamp(input) {
+export function decodeLinkedInActivityTimestamp(input) {
   const raw = String(input || '');
   const match = raw.match(/activity[:/-](\d{15,20})/i) || raw.match(/(\d{15,20})/);
   if (!match) {
@@ -94,7 +94,7 @@ function decodeLinkedInActivityTimestamp(input) {
   }
 }
 
-function normalizePost(post, index = 0) {
+export function normalizePost(post, index = 0) {
   const text = String(post.text || post.caption || post.description || '').trim();
   const createdAtValue = post.createdAt || post.publishedAt || post.date || new Date().toISOString();
   const decodedTimestamp =
@@ -158,7 +158,7 @@ function normalizePost(post, index = 0) {
   };
 }
 
-function mergePosts(oldPost, newPost) {
+export function mergePosts(oldPost, newPost) {
   const merged = { ...oldPost, ...newPost };
 
   merged.createdAt = oldPost.createdAt || newPost.createdAt;
@@ -362,7 +362,7 @@ function resolveStaticPath(urlPathname) {
   return resolved;
 }
 
-const server = http.createServer(async (req, res) => {
+export const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', `http://${req.headers.host}`);
 
   if (req.method === 'OPTIONS') {
@@ -460,7 +460,11 @@ const server = http.createServer(async (req, res) => {
   await sendFile(res, filePath);
 });
 
-server.listen(PORT, HOST, async () => {
-  await ensureDataFile();
-  console.log(`LinkedIn analytics app running on http://${HOST}:${PORT}`);
-});
+const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+
+if (isMain) {
+  server.listen(PORT, HOST, async () => {
+    await ensureDataFile();
+    console.log(`LinkedIn analytics app running on http://${HOST}:${PORT}`);
+  });
+}
